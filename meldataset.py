@@ -87,9 +87,8 @@ class FilePathDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):        
         data = self.data_list[idx]
         path = data[0]
-        
+   
         wave, text_tensor = self._load_tensor(data)
-        
         mel_tensor = preprocess(wave).squeeze()
         
         acoustic_feature = mel_tensor.squeeze()
@@ -99,11 +98,16 @@ class FilePathDataset(torch.utils.data.Dataset):
         return acoustic_feature, text_tensor, path, wave
 
     def _load_tensor(self, data):
-        wave_path, text = data
+     
+        if(len(data) == 3):    # Kinda weird error, add this to fix multiple speaker error, the output is single speaker only
+          wave_path, text,_ = data
+        else:
+          wave_path, text = data
+        
         wave, sr = sf.read(osp.join(self.root_path, wave_path))
         if wave.shape[-1] == 2:
             wave = wave[:, 0].squeeze()
-        if sr != 24000:
+        if sr != 24000:     # Can we change this to 44khz?
             wave = librosa.resample(wave, orig_sr=sr, target_sr=24000)
             print(wave_path, sr)
         
